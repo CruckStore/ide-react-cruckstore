@@ -8,15 +8,16 @@ $font-stack: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
+html,
 body,
-html {
+#root {
   height: 100%;
-  font-family: $font-stack;
+  margin: 0;
+  padding: 0;
   background-color: $background;
+  font-family: $font-stack;
 }
 
 .app {
@@ -85,9 +86,18 @@ html {
     }
 
     .workspace {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      flex: 1;
+
+      .no-file {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $text-color;
+        font-size: 1.2rem;
+      }
 
       .editor {
         flex: 1;
