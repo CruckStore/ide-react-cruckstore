@@ -12,10 +12,10 @@ const Editor: React.FC<EditorProps> = ({ value, onChange }) => (
     <CodeMirror
       value={value}
       extensions={[javascript()]}
-      onChange={(v) => onChange(v)}
       editable={true}
-      height="100%"
+      onChange={v => onChange(v)}
       basicSetup={true}
+      style={{ height: '100%', minHeight: '100%' }}
     />
   </div>
 );
