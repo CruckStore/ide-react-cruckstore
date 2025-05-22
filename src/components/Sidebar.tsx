@@ -4,7 +4,7 @@ interface SidebarProps {
   files: string[];
   activeFile: string;
   examples: { title: string; code: string }[];
-  onSelect: (name: string) => void;
+  onSelect: (n: string) => void;
   onExample: (code: string) => void;
 }
 
@@ -19,13 +19,13 @@ const Sidebar: React.FC<SidebarProps> = ({
     <section>
       <h2>Fichiers</h2>
       <ul>
-        {files.map((file) => (
+        {files.map((f) => (
           <li
-            key={file}
-            className={file === activeFile ? "active" : ""}
-            onClick={() => onSelect(file)}
+            key={f}
+            className={f === activeFile ? "active" : ""}
+            onClick={() => onSelect(f)}
           >
-            {file}
+            {f}
           </li>
         ))}
       </ul>
@@ -33,9 +33,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     <section>
       <h2>Exemples</h2>
       <ul>
-        {examples.map((ex) => (
-          <li key={ex.title} onClick={() => onExample(ex.code)}>
-            {ex.title}
+        {examples.map((e) => (
+          <li key={e.title} onClick={() => onExample(e.code)}>
+            {e.title}
           </li>
         ))}
       </ul>
@@ -44,15 +44,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       <h2>Docs</h2>
       <ul>
         <li>
-          <strong>print</strong> &mdash; Affiche du texte:{" "}
-          <code>print "texte";</code>
+          <strong>print</strong>: <code>print "texte";</code>
         </li>
         <li>
-          <strong>var</strong> &mdash; Déclare une variable:{" "}
-          <code>var x = 1;</code>
+          <strong>var</strong>: <code>var x = 1;</code>
         </li>
         <li>
-          <strong>func</strong> &mdash; Déclare une fonction:{" "}
+          <strong>func</strong>:{" "}
           <code>
             func nom() {"{"}...{"}"};
           </code>

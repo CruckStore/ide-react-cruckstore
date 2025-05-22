@@ -4,7 +4,7 @@ import { javascript } from "@codemirror/lang-javascript";
 
 interface EditorProps {
   value: string;
-  onChange: (val: string) => void;
+  onChange: (v: string) => void;
 }
 
 const Editor: React.FC<EditorProps> = ({ value, onChange }) => (
@@ -12,7 +12,7 @@ const Editor: React.FC<EditorProps> = ({ value, onChange }) => (
     <CodeMirror
       value={value}
       extensions={[javascript()]}
-      onChange={(value) => onChange(value)}
+      onChange={(v) => onChange(v)}
       editable={true}
       height="100%"
       basicSetup={true}

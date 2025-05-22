@@ -5,10 +5,7 @@ import Console from "./components/Console";
 import "./styles.scss";
 
 const examples: { title: string; code: string }[] = [
-  {
-    title: "Hello World",
-    code: 'print "Hello, CruckStore!";',
-  },
+  { title: "Hello World", code: 'print "Hello, CruckStore!";' },
   {
     title: "Boucle For",
     code: `func main() {
@@ -101,9 +98,7 @@ const App: React.FC = () => {
 
     lines.forEach((line) => {
       const p = line.match(/^print\s+"([^"]*)"\s*;?$/);
-      if (p) {
-        outputLines.push(p[1]);
-      }
+      if (p) outputLines.push(p[1]);
     });
 
     const start = lines.findIndex((l) => l.startsWith("func main"));
@@ -120,6 +115,14 @@ const App: React.FC = () => {
             m = line.match(/^var\s+(\w+)\s*=\s*(\d+)\s*;?$/);
             if (m) {
               vars[m[1]] = Number(m[2]);
+              ip++;
+              continue;
+            }
+
+            m = line.match(/^(\w+)\s*=\s*(\w+)\s*\+\s*(\d+)\s*;?$/);
+            if (m) {
+              const [, dest, src, inc] = m;
+              vars[dest] = (vars[src] ?? 0) + Number(inc);
               ip++;
               continue;
             }
@@ -155,7 +158,7 @@ const App: React.FC = () => {
         execBlock(body);
       }
     }
-
+    
     setOutput(outputLines.join("\n"));
   };
 
