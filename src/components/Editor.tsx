@@ -13,6 +13,7 @@ const Editor: React.FC<EditorProps> = ({ value, onChange }) => (
       value={value}
       extensions={[javascript()]}
       onChange={(value) => onChange(value)}
+      editable={true}
       height="100%"
     />
   </div>
