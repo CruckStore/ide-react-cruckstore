@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Editor from "./components/Editor";
 import Console from "./components/Console";
+import InterpreterWorker from "./worker/interpreter.worker.ts?worker";
 import "./styles.scss";
 
 const examples: { title: string; code: string }[] = [
@@ -36,6 +37,29 @@ const App: React.FC = () => {
   const [activeFile, setActiveFile] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [output, setOutput] = useState<string>("");
+  const [worker] = useState(() => new InterpreterWorker());
+  const [errors, setErrors] = useState<
+    { message: string; line: number; col: number }[]
+  >([]);
+
+  useEffect(() => {
+    worker.onmessage = (ev: MessageEvent<any>) => {
+      if (ev.data.type === "output") {
+        setOutput(ev.data.lines.join("\n"));
+        setErrors([]);
+      }
+      if (ev.data.type === "error") {
+        setOutput("");
+        setErrors([
+          {
+            message: ev.data.message,
+            line: ev.data.line,
+            col: ev.data.col,
+          },
+        ]);
+      }
+    };
+  }, [worker]);
 
   useEffect(() => {
     const keys = Object.keys(localStorage).filter((k) =>
@@ -92,6 +116,8 @@ const App: React.FC = () => {
       alert("Aucun code à exécuter.");
       return;
     }
+    worker.postMessage({ type: "run", code: content });
+
     const lines = content.split("\n").map((l) => l.trim());
     const vars: Record<string, number> = {};
     const outputLines: string[] = [];
@@ -158,7 +184,7 @@ const App: React.FC = () => {
         execBlock(body);
       }
     }
-    
+
     setOutput(outputLines.join("\n"));
   };
 
@@ -185,8 +211,8 @@ const App: React.FC = () => {
         <div className="workspace">
           {activeFile || content ? (
             <>
-              <Editor value={content} onChange={setContent} />
-              <Console output={output} />
+              <Editor value={content} onChange={setContent} errors={errors} />
+              <Console output={output} errors={errors} />
             </>
           ) : (
             <div className="no-file">
