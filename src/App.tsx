@@ -87,19 +87,73 @@ const App: React.FC = () => {
     a.click();
   };
   const runCode = () => {
-    if (!activeFile) {
-      alert("Aucun fichier actif. Créez-en un d’abord.");
+    if (!content.trim()) {
+      alert("Aucun code à exécuter. Créez ou chargez du contenu.");
       return;
     }
-    const lines = content.split("\n");
-    let out = "";
-    lines.forEach((line, idx) => {
-      const m = line.match(/^print\s+"(.+)"\s*;?$/);
-      if (m) out += m[1] + "\n";
-      else if (line.trim())
-        out += `Erreur ligne ${idx + 1}: syntaxe inconnue\n`;
-    });
-    setOutput(out);
+    const lines = content.split("\n").map((l) => l.trim());
+    const vars: Record<string, number> = {};
+    let output = "";
+
+    const startMain = lines.findIndex((l) => l.startsWith("func main"));
+    const endMain = lines.lastIndexOf("}");
+    if (startMain === -1 || endMain === -1) {
+      alert("Pas de fonction main() valide trouvée.");
+      setOutput("");
+      return;
+    }
+    const body = lines.slice(startMain + 1, endMain);
+
+    const execBlock = (block: string[]) => {
+      let i = 0;
+      while (i < block.length) {
+        const line = block[i];
+
+        let m = line.match(/^var\s+(\w+)\s*=\s*(\d+)\s*;?$/);
+        if (m) {
+          vars[m[1]] = Number(m[2]);
+          i++;
+          continue;
+        }
+
+        m = line.match(/^print\s+"([^"]*)"\s*\+\s*(\w+)\s*;?$/);
+        if (m) {
+          const [_, txt, v] = m;
+          const val = vars[v] ?? 0;
+          output += txt + val + "\n";
+          i++;
+          continue;
+        }
+
+        m = line.match(/^while\s+(\w+)\s*<\s*(\d+)\s*{\s*$/);
+        if (m) {
+          const [_w, v, lim] = m;
+          const limN = Number(lim);
+
+          const blockInner: string[] = [];
+          let depth = 1;
+          let j = i + 1;
+          while (j < block.length && depth > 0) {
+            if (block[j].endsWith("{")) depth++;
+            if (block[j] === "}") depth--;
+            if (depth > 0) blockInner.push(block[j]);
+            j++;
+          }
+
+          while ((vars[v] ?? 0) < limN) {
+            execBlock(blockInner);
+          }
+
+          i = j;
+          continue;
+        }
+
+        i++;
+      }
+    };
+
+    execBlock(body);
+    setOutput(output);
   };
 
   return (
