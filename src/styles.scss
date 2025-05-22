@@ -1,69 +1,114 @@
+$primary: #2a9d8f;
+$secondary: #264653;
+$background: #f0f0f0;
+$editor-bg: #ffffff;
+$console-bg: #1e1e1e;
+$text-color: #333;
+$font-stack: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body,
 html {
-  margin: 0;
-  padding: 0;
   height: 100%;
-  font-family: sans-serif;
+  font-family: $font-stack;
+  background-color: $background;
 }
-#root {
+
+.app {
   display: flex;
   flex-direction: column;
   height: 100%;
-}
-header {
-  background: #333;
-  color: #fff;
-  padding: 0.5em 1em;
-  display: flex;
-  align-items: center;
-}
-header h1 {
-  margin: 0;
-  font-size: 1.2em;
-  flex: 1;
-}
-.toolbar button {
-  margin-left: 0.5em;
-  padding: 0.3em 0.6em;
-  font-size: 0.9em;
-}
-#main {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-#sidebar {
-  width: 200px;
-  background: #f4f4f4;
-  border-right: 1px solid #ddd;
-  padding: 0.5em;
-  box-sizing: border-box;
-}
-#sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-#sidebar li {
-  padding: 0.3em;
-  cursor: pointer;
-  border-radius: 3px;
-}
-#sidebar li:hover,
-#sidebar .active {
-  background: #ddd;
-}
-#editor-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-#console {
-  height: 150px;
-  background: #1e1e1e;
-  color: #eee;
-  padding: 0.5em;
-  font-family: monospace;
-  overflow-y: auto;
-  border-top: 1px solid #444;
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: $secondary;
+    color: #fff;
+    padding: 1rem 2rem;
+
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    .toolbar {
+      button {
+        background-color: $primary;
+        border: none;
+        color: #fff;
+        padding: 0.5rem 1rem;
+        margin-left: 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(#000, 0.2);
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: darken($primary, 10%);
+        }
+      }
+    }
+  }
+
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+
+    .sidebar {
+      width: 250px;
+      background-color: #fff;
+      border-right: 1px solid darken($background, 10%);
+      padding: 1rem;
+
+      ul {
+        list-style: none;
+
+        li {
+          padding: 0.5rem;
+          margin-bottom: 0.25rem;
+          border-radius: 0.25rem;
+          cursor: pointer;
+
+          &:hover,
+          &.active {
+            background-color: $primary;
+            color: #fff;
+          }
+        }
+      }
+    }
+
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+
+      .editor {
+        flex: 1;
+
+        .cm-editor {
+          height: 100%;
+          background-color: $editor-bg;
+        }
+      }
+
+      .console {
+        height: 200px;
+        background-color: $console-bg;
+        color: #eee;
+        padding: 1rem;
+        overflow-y: auto;
+
+        pre {
+          font-family: monospace;
+        }
+      }
+    }
+  }
 }
