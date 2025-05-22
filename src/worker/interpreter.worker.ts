@@ -19,6 +19,7 @@ function evalOperand(
   throw { message: `Variable non déclarée: ${token}`, ...pos };
 }
 
+// Parse and execute code upon message
 ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
   if (ev.data.type !== "run") return;
   const code = ev.data.code;
@@ -33,12 +34,11 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
         if (line[i] === "{") depth++;
         if (line[i] === "}") {
           depth--;
-          if (depth < 0) {
+          if (depth < 0)
             throw {
               message: "Accolade fermante inattendue",
               ...reportPosition(idx, i),
             };
-          }
         }
       }
     });
@@ -59,16 +59,23 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
     let offset = 0;
 
     if (mainStart >= 0) {
-      let brace = 0;
+      let braceCount = 0;
       let end = -1;
-      for (let i = mainStart; i < lines.length; i++) {
-        if (lines[i].endsWith("{")) brace++;
-        if (lines[i] === "}") brace--;
-        if (brace === 0) {
+      for (let i = mainStart; i < rawLines.length; i++) {
+        for (const ch of rawLines[i]) {
+          if (ch === "{") braceCount++;
+          else if (ch === "}") braceCount--;
+        }
+        if (braceCount === 0) {
           end = i;
           break;
         }
       }
+      if (end < 0)
+        throw {
+          message: "Fonction main non fermée",
+          ...reportPosition(mainStart, rawLines[mainStart].indexOf("{")),
+        };
       execLines = lines.slice(mainStart + 1, end);
       offset = mainStart + 1;
     } else {
@@ -87,6 +94,7 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
           continue;
         }
 
+        // PRINT
         let m = raw.match(/^print\s+"([^"]*)"(?:\s*\+\s*(\w+))?\s*;$/);
         if (m) {
           const [, txt, varname] = m;
@@ -102,6 +110,7 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
           continue;
         }
 
+        // VAR
         m = raw.match(/^var\s+(\w+)\s*=\s*(\w+|\d+)\s*;$/);
         if (m) {
           const [, name, expr] = m;
@@ -112,6 +121,7 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
           continue;
         }
 
+        // ASSIGN
         m = raw.match(/^(\w+)\s*=\s*(\w+)\s*\+\s*(\w+)\s*;$/);
         if (m) {
           const [, dest, op1, op2] = m;
@@ -124,6 +134,7 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
           continue;
         }
 
+        // WHILE
         m = raw.match(/^while\s+(\w+)\s*<\s*(\d+)\s*\{$/);
         if (m) {
           const [, v, lim] = m;
@@ -133,7 +144,6 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
               message: `Variable non déclarée: ${v}`,
               ...reportPosition(lineNum, col),
             };
-
           const inner: string[] = [];
           let depth = 1;
           let j = ip + 1;
@@ -143,9 +153,7 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
             if (depth > 0) inner.push(block[j]);
             j++;
           }
-          while ((vars[v] ?? 0) < Number(lim)) {
-            execBlock(inner, base + ip + 1);
-          }
+          while ((vars[v] ?? 0) < Number(lim)) execBlock(inner, base + ip + 1);
           ip = j;
           continue;
         }
@@ -159,7 +167,6 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
               message: `Variable non déclarée: ${v}`,
               ...reportPosition(lineNum, col),
             };
-
           const ifBlock: string[] = [];
           let depth = 1;
           let j = ip + 1;
@@ -169,7 +176,6 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
             if (depth > 0) ifBlock.push(block[j]);
             j++;
           }
-
           let elseBlock: string[] = [];
           if (/^else\s*\{$/.test(block[j])) {
             depth = 1;
@@ -181,7 +187,6 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
               j++;
             }
           }
-
           const left = vars[v];
           const right = Number(num);
           let cond = false;
@@ -234,7 +239,6 @@ ctx.addEventListener("message", (ev: MessageEvent<MessageToWorker>) => {
     }
 
     execBlock(execLines, offset);
-
     ctx.postMessage({ type: "output", lines: outputLines });
   } catch (err: any) {
     const e =
