@@ -4,6 +4,34 @@ import Editor from "./components/Editor";
 import Console from "./components/Console";
 import "./styles.scss";
 
+const examples: { title: string; code: string }[] = [
+  {
+    title: "Hello World",
+    code: 'print "Hello, CruckStore!";',
+  },
+  {
+    title: "Boucle For",
+    code: `func main() {
+  var i = 0;
+  while i < 5 {
+    print "i = " + i;
+    i = i + 1;
+  }
+}\nmain();`,
+  },
+  {
+    title: "Condition",
+    code: `func main() {
+  var x = 10;
+  if x > 5 {
+    print "x est grand";
+  } else {
+    print "x est petit";
+  }
+}\nmain();`,
+  },
+];
+
 const App: React.FC = () => {
   const [files, setFiles] = useState<string[]>([]);
   const [activeFile, setActiveFile] = useState<string>("");
@@ -11,24 +39,28 @@ const App: React.FC = () => {
   const [output, setOutput] = useState<string>("");
 
   useEffect(() => {
-    const keys = Object.keys(localStorage).filter((key) =>
-      key.startsWith("cruck_")
+    const keys = Object.keys(localStorage).filter((k) =>
+      k.startsWith("cruck_")
     );
-    const f = keys.map((key) => key.replace("cruck_", ""));
+    const f = keys.map((k) => k.replace("cruck_", ""));
     setFiles(f);
-    if (f.length) {
-      loadFile(f[0]);
-    }
+    if (f.length) loadFile(f[0]);
   }, []);
 
   const loadFile = (name: string) => {
-    if (!name) return;
     const c = localStorage.getItem(`cruck_${name}`) || "";
     setActiveFile(name);
     setContent(c);
     setOutput("");
   };
 
+  const loadExample = (code: string) => {
+    setActiveFile("");
+    setContent(code);
+    setOutput("");
+  };
+
+  // ... saveFile, newFile, downloadFile, runCode (inchangés)
   const saveFile = () => {
     if (!activeFile) {
       alert("Aucun fichier actif. Créez-en un d’abord.");
@@ -36,7 +68,6 @@ const App: React.FC = () => {
     }
     localStorage.setItem(`cruck_${activeFile}`, content);
   };
-
   const newFile = () => {
     const name = prompt("Nom du nouveau fichier (.cr) :");
     if (!name) return;
@@ -44,7 +75,6 @@ const App: React.FC = () => {
     setFiles((prev) => [...prev, name]);
     loadFile(name);
   };
-
   const downloadFile = () => {
     if (!activeFile) {
       alert("Aucun fichier actif. Créez-en un d’abord.");
@@ -56,7 +86,6 @@ const App: React.FC = () => {
     a.download = activeFile;
     a.click();
   };
-
   const runCode = () => {
     if (!activeFile) {
       alert("Aucun fichier actif. Créez-en un d’abord.");
@@ -66,11 +95,9 @@ const App: React.FC = () => {
     let out = "";
     lines.forEach((line, idx) => {
       const m = line.match(/^print\s+"(.+)"\s*;?$/);
-      if (m) {
-        out += m[1] + "\n";
-      } else if (line.trim() !== "") {
+      if (m) out += m[1] + "\n";
+      else if (line.trim())
         out += `Erreur ligne ${idx + 1}: syntaxe inconnue\n`;
-      }
     });
     setOutput(out);
   };
@@ -88,16 +115,25 @@ const App: React.FC = () => {
         </div>
       </header>
       <div className="main">
-        <Sidebar files={files} activeFile={activeFile} onSelect={loadFile} />
+        <Sidebar
+          files={files}
+          activeFile={activeFile}
+          examples={examples}
+          onSelect={loadFile}
+          onExample={loadExample}
+        />
         <div className="workspace">
-          {activeFile ? (
+          {activeFile || content ? (
             <>
               <Editor value={content} onChange={setContent} />
               <Console output={output} />
             </>
           ) : (
             <div className="no-file">
-              <p>Aucun fichier ouvert. Veuillez créer ou ouvrir un fichier.</p>
+              <p>
+                Aucun fichier ouvert. Veuillez créer/ou sélectionner un fichier
+                ou un exemple.
+              </p>
             </div>
           )}
         </div>
@@ -105,5 +141,4 @@ const App: React.FC = () => {
     </div>
   );
 };
-
 export default App;
