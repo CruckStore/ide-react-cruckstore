@@ -80,6 +80,8 @@ body,
           &.active {
             background-color: $primary;
             color: #fff;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(#000, 0.2);
           }
         }
       }
