@@ -12,35 +12,44 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const keys = Object.keys(localStorage).filter((key) =>
-      key.startsWith("cr_")
+      key.startsWith("cruck_")
     );
-    const f = keys.map((key) => key.replace("cr_", ""));
+    const f = keys.map((key) => key.replace("cruck_", ""));
     setFiles(f);
-    if (f.length && !activeFile) loadFile(f[0]);
+    if (f.length) {
+      loadFile(f[0]);
+    }
   }, []);
 
   const loadFile = (name: string) => {
-    const c = localStorage.getItem(`cr_${name}`) || "";
+    if (!name) return;
+    const c = localStorage.getItem(`cruck_${name}`) || "";
     setActiveFile(name);
     setContent(c);
     setOutput("");
   };
 
   const saveFile = () => {
-    if (!activeFile) return;
-    localStorage.setItem(`cr_${activeFile}`, content);
+    if (!activeFile) {
+      alert("Aucun fichier actif. Créez-en un d’abord.");
+      return;
+    }
+    localStorage.setItem(`cruck_${activeFile}`, content);
   };
 
   const newFile = () => {
     const name = prompt("Nom du nouveau fichier (.cr) :");
     if (!name) return;
-    localStorage.setItem(`cr_${name}`, "");
+    localStorage.setItem(`cruck_${name}`, "");
     setFiles((prev) => [...prev, name]);
     loadFile(name);
   };
 
   const downloadFile = () => {
-    if (!activeFile) return;
+    if (!activeFile) {
+      alert("Aucun fichier actif. Créez-en un d’abord.");
+      return;
+    }
     const blob = new Blob([content], { type: "text/plain" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -49,6 +58,10 @@ const App: React.FC = () => {
   };
 
   const runCode = () => {
+    if (!activeFile) {
+      alert("Aucun fichier actif. Créez-en un d’abord.");
+      return;
+    }
     const lines = content.split("\n");
     let out = "";
     lines.forEach((line, idx) => {
@@ -77,8 +90,16 @@ const App: React.FC = () => {
       <div className="main">
         <Sidebar files={files} activeFile={activeFile} onSelect={loadFile} />
         <div className="workspace">
-          <Editor value={content} onChange={setContent} />
-          <Console output={output} />
+          {activeFile ? (
+            <>
+              <Editor value={content} onChange={setContent} />
+              <Console output={output} />
+            </>
+          ) : (
+            <div className="no-file">
+              <p>Aucun fichier ouvert. Veuillez créer ou ouvrir un fichier.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
