@@ -30,6 +30,15 @@ main();`,
 }
 main();`,
   },
+  {
+    title: "Dessin ASCII",
+    code: `print "  *  ";
+    print " *** ";
+    print "*****";
+    print " *** ";
+    print "  *  ";
+    `,
+  },
 ];
 
 const App: React.FC = () => {
