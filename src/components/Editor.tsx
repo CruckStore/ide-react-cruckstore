@@ -15,6 +15,7 @@ const Editor: React.FC<EditorProps> = ({ value, onChange }) => (
       onChange={(value) => onChange(value)}
       editable={true}
       height="100%"
+      basicSetup={true}
     />
   </div>
 );

@@ -17,7 +17,8 @@ const examples: { title: string; code: string }[] = [
     print "i = " + i;
     i = i + 1;
   }
-}\nmain();`,
+}
+main();`,
   },
   {
     title: "Condition",
@@ -28,7 +29,8 @@ const examples: { title: string; code: string }[] = [
   } else {
     print "x est petit";
   }
-}\nmain();`,
+}
+main();`,
   },
 ];
 
@@ -60,7 +62,6 @@ const App: React.FC = () => {
     setOutput("");
   };
 
-  // ... saveFile, newFile, downloadFile, runCode (inchangés)
   const saveFile = () => {
     if (!activeFile) {
       alert("Aucun fichier actif. Créez-en un d’abord.");
@@ -68,6 +69,7 @@ const App: React.FC = () => {
     }
     localStorage.setItem(`cruck_${activeFile}`, content);
   };
+
   const newFile = () => {
     const name = prompt("Nom du nouveau fichier (.cr) :");
     if (!name) return;
@@ -75,6 +77,7 @@ const App: React.FC = () => {
     setFiles((prev) => [...prev, name]);
     loadFile(name);
   };
+
   const downloadFile = () => {
     if (!activeFile) {
       alert("Aucun fichier actif. Créez-en un d’abord.");
@@ -86,74 +89,74 @@ const App: React.FC = () => {
     a.download = activeFile;
     a.click();
   };
+
   const runCode = () => {
     if (!content.trim()) {
-      alert("Aucun code à exécuter. Créez ou chargez du contenu.");
+      alert("Aucun code à exécuter.");
       return;
     }
     const lines = content.split("\n").map((l) => l.trim());
     const vars: Record<string, number> = {};
-    let output = "";
+    const outputLines: string[] = [];
 
-    const startMain = lines.findIndex((l) => l.startsWith("func main"));
-    const endMain = lines.lastIndexOf("}");
-    if (startMain === -1 || endMain === -1) {
-      alert("Pas de fonction main() valide trouvée.");
-      setOutput("");
-      return;
-    }
-    const body = lines.slice(startMain + 1, endMain);
-
-    const execBlock = (block: string[]) => {
-      let i = 0;
-      while (i < block.length) {
-        const line = block[i];
-
-        let m = line.match(/^var\s+(\w+)\s*=\s*(\d+)\s*;?$/);
-        if (m) {
-          vars[m[1]] = Number(m[2]);
-          i++;
-          continue;
-        }
-
-        m = line.match(/^print\s+"([^"]*)"\s*\+\s*(\w+)\s*;?$/);
-        if (m) {
-          const [_, txt, v] = m;
-          const val = vars[v] ?? 0;
-          output += txt + val + "\n";
-          i++;
-          continue;
-        }
-
-        m = line.match(/^while\s+(\w+)\s*<\s*(\d+)\s*{\s*$/);
-        if (m) {
-          const [_w, v, lim] = m;
-          const limN = Number(lim);
-
-          const blockInner: string[] = [];
-          let depth = 1;
-          let j = i + 1;
-          while (j < block.length && depth > 0) {
-            if (block[j].endsWith("{")) depth++;
-            if (block[j] === "}") depth--;
-            if (depth > 0) blockInner.push(block[j]);
-            j++;
-          }
-
-          while ((vars[v] ?? 0) < limN) {
-            execBlock(blockInner);
-          }
-
-          i = j;
-          continue;
-        }
-
-        i++;
+    lines.forEach((line) => {
+      const p = line.match(/^print\s+"([^"]*)"\s*;?$/);
+      if (p) {
+        outputLines.push(p[1]);
       }
-    };
+    });
 
-    execBlock(body);
-    setOutput(output);
+    const start = lines.findIndex((l) => l.startsWith("func main"));
+    if (start !== -1) {
+      const end = lines.findIndex((l, i) => i > start && l === "}");
+      if (end !== -1) {
+        const body = lines.slice(start + 1, end);
+        const execBlock = (block: string[]) => {
+          let ip = 0;
+          while (ip < block.length) {
+            const line = block[ip];
+            let m: RegExpMatchArray | null;
+
+            m = line.match(/^var\s+(\w+)\s*=\s*(\d+)\s*;?$/);
+            if (m) {
+              vars[m[1]] = Number(m[2]);
+              ip++;
+              continue;
+            }
+
+            m = line.match(/^while\s+(\w+)\s*<\s*(\d+)\s*{\s*$/);
+            if (m) {
+              const [, v, lim] = m;
+              const inner: string[] = [];
+              let depth = 1,
+                j = ip + 1;
+              while (j < block.length && depth > 0) {
+                if (block[j].endsWith("{")) depth++;
+                if (block[j] === "}") depth--;
+                if (depth > 0) inner.push(block[j]);
+                j++;
+              }
+              while ((vars[v] ?? 0) < Number(lim)) execBlock(inner);
+              ip = j;
+              continue;
+            }
+
+            m = line.match(/^print\s+"([^\"]*)"\s*\+\s*(\w+)\s*;?$/);
+            if (m) {
+              const [, txt, v] = m;
+              outputLines.push(txt + (vars[v] ?? 0));
+              ip++;
+              continue;
+            }
+
+            ip++;
+          }
+        };
+        execBlock(body);
+      }
+    }
+
+    setOutput(outputLines.join("\n"));
   };
 
   return (
@@ -195,4 +198,5 @@ const App: React.FC = () => {
     </div>
   );
 };
+
 export default App;
